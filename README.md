@@ -1,108 +1,41 @@
 # Heart-desease-neuro-fuzzy
 
-%% Clear Workspace
-close all;
-clc;
 
-%% Load Data
-filename = 'C:\Program Files\MATLAB\heart_attack_prediction_dataset_Modified.xlsx'; % specify your file name
-opts = detectImportOptions(filename);
-opts.VariableNamingRule = 'preserve'; % Preserve original column headers
-data = readtable(filename, opts);
+Problem Statement
 
-%% Extract Features and Target
-Age = data{:, 1};
-Gender = categorical(data{:, 2});
-Cholesterol = data{:, 3};
-BloodPressure = data{:, 4};
-HeartRate = data{:, 5};
-Diabetes = data{:, 6};
-FamilyHistory = data{:, 7};
-Smoking = data{:, 8};
-Obesity = data{:, 9};
-Alcohol = data{:, 10};
-Exercise = data{:, 11};
-Diet = categorical(data{:, 12});
+Cardiovascular diseases are a leading cause of mortality worldwide. Predicting the risk of heart problems can be crucial for early intervention and preventive measures. In this mini project, you are tasked with developing a predictive model using computational intelligence techniques to assess the likelihood of an individual experiencing heart problems. 
+Objectives
+The objective of this mini project is to employ computational intelligence methods to predict the risk of heart problems in individuals based on relevant health data. Students will utilize soft computing techniques, specifically Fuzzy Logic, Genetic Algorithms (GA), and Artificial Neural Networks (ANN), individually or in combination (hybrid approaches: Fuzzy-GA, GA-NN, Neuro-fuzzy).
 
-output = data{:, 25}; % Target variable
+Instructions
+By using your knowledge and intuition, design an intelligent controller for realizing this intelligent system. You need to do the followings:
 
-%% Fuzzy Logic System - Initialization
-% Define input variables for fuzzy inference system
-fis = mamfis('Name', 'HeartAttackRiskFIS');
+1)	Data Collection:
+•	Access the data from any one of the following provided sources:
+o	ScienceDirect Heart Disease Prediction Dataset (Table 1) (https://www.sciencedirect.com/science/article/pii/S2352914819301996 ).
+o	Kaggle Heart Attack Prediction Dataset (https://www.kaggle.com/datasets/iamsouravbanerjee/heart-attack-prediction-dataset ). 
+•	Explore the dataset to understand the features and their distributions.
+•	Normalize or standardize the data as needed.
+2)	Soft-Computing Modeling and Simulation:
+•	Choose and implement suitable soft-computing methods, such as fuzzy logic, neural networks, genetic algorithm, or hybrid approaches.
+•	Attain excellent marks by incorporating hybrid approaches into your solution.
+•	Develop a Graphical User Interface to embed the simulation process (BONUS Marks)
+3)	Evaluation and Validation:
+•	Validate the model's predictions by comparing them with the actual heart attack data from https://www.kaggle.com/datasets/iamsouravbanerjee/heart-attack-prediction-dataset .
+•	Optimize parameters and fine-tune your model for better performance.
+•	Analyze and interpret the results to evaluate the effectiveness of the soft-computing approach.
+4)	Documentation and Presentation:
+•	Prepare a comprehensive report documenting the project methodology, implementation details, and findings.
+•	Create an engaging presentation to showcase the project's objectives, methodology, and results.
+Deliverables
+1)	Final Project Report:
+•	Present a comprehensive report documenting the project implementation, including introduction, soft-computing modeling, simulation, and analysis of results.
+2)	Presentation:
+•	Deliver an engaging presentation summarizing the project, highlighting the key aspects, methodology, and findings.
+3)	Code and Documentation:
+•	Submit well-documented code that demonstrates the implementation of the soft-computing methods and simulation techniques used in the project.
+4)	Individual Contributions:
+•	Each team member should submit a summary of their individual contributions to the project.
 
-% Age Fuzzy Membership
-fis = addInput(fis, [20 80], 'Name', 'Age');
-fis = addMF(fis, 'Age', 'trapmf', [20 20 30 40], 'Name', 'Young');
-fis = addMF(fis, 'Age', 'trapmf', [30 40 50 60], 'Name', 'MiddleAged');
-fis = addMF(fis, 'Age', 'trapmf', [50 60 80 80], 'Name', 'Old');
 
-% Cholesterol Fuzzy Membership
-fis = addInput(fis, [100 400], 'Name', 'Cholesterol');
-fis = addMF(fis, 'Cholesterol', 'trapmf', [100 100 150 200], 'Name', 'Low');
-fis = addMF(fis, 'Cholesterol', 'trapmf', [150 200 250 300], 'Name', 'Moderate');
-fis = addMF(fis, 'Cholesterol', 'trapmf', [250 300 400 400], 'Name', 'High');
 
-% Blood Pressure Fuzzy Membership
-fis = addInput(fis, [80 200], 'Name', 'BloodPressure');
-fis = addMF(fis, 'BloodPressure', 'trapmf', [80 80 100 120], 'Name', 'Normal');
-fis = addMF(fis, 'BloodPressure', 'trapmf', [100 120 140 160], 'Name', 'Elevated');
-fis = addMF(fis, 'BloodPressure', 'trapmf', [140 160 200 200], 'Name', 'High');
-
-% Output Risk
-fis = addOutput(fis, [0 1], 'Name', 'Risk');
-fis = addMF(fis, 'Risk', 'trimf', [0 0 0.5], 'Name', 'Low');
-fis = addMF(fis, 'Risk', 'trimf', [0.25 0.5 0.75], 'Name', 'Moderate');
-fis = addMF(fis, 'Risk', 'trimf', [0.5 1 1], 'Name', 'High');
-
-%% Define Rules
-rules = ["If Age is Young and Cholesterol is Low and BloodPressure is Normal then Risk is Low", ...
-         "If Age is MiddleAged and Cholesterol is Moderate and BloodPressure is Elevated then Risk is Moderate", ...
-         "If Age is Old and Cholesterol is High and BloodPressure is High then Risk is High"];
-
-fis = addRule(fis, rules);
-
-%% Train Neuro-Fuzzy System (ANFIS)
-% Prepare input and output for ANFIS
-BPValues = cellfun(@(x) sscanf(x, '%d/%d'), BloodPressure, 'UniformOutput', false);
-BPMatrix = cell2mat(BPValues');
-BPMean = mean(BPMatrix, 2); % Mean Arterial Pressure
-
-inputs = [Age Cholesterol BPMean];
-anfis_data = [inputs, output];
-
-% Split Data
-cv = cvpartition(size(anfis_data, 1), 'HoldOut', 0.3);
-idx = cv.test;
-trainData = anfis_data(~idx, :);
-testData = anfis_data(idx, :);
-
-% Train FIS using ANFIS
-[trainedFIS, trainError] = anfis(trainData, fis);
-
-%% Predict with Trained FIS
-anfisOutput = evalfis(trainedFIS, testData(:, 1:3));
-
-%% ANN Integration
-% Use FIS output as an additional feature for ANN
-XTrain = [trainData(:, 1:3), evalfis(trainedFIS, trainData(:, 1:3))];
-XTest = [testData(:, 1:3), anfisOutput];
-YTrain = trainData(:, end);
-YTest = testData(:, end);
-
-% Standardize Data
-meanX = mean(XTrain);
-stdX = std(XTrain);
-XTrain = (XTrain - meanX) ./ stdX;
-XTest = (XTest - meanX) ./ stdX;
-
-% Define and Train ANN
-hiddenLayerSizes = 10;
-Mdl = fitcnet(XTrain, YTrain, 'LayerSizes', hiddenLayerSizes);
-
-% Make Predictions
-YPred = predict(Mdl, XTest);
-
-%% Evaluate Performance
-accuracy = sum(round(YPred) == YTest) / length(YTest) * 100;
-fprintf('Accuracy: %.2f%%\n', accuracy);
-confusionchart(YTest,round(YPred));
